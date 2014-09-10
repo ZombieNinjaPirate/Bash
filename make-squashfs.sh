@@ -32,18 +32,25 @@ set -e
 
 declare AUTHOR='(c) 2014, Are Hansen - Honeypot Development'
 declare DATE='2014, 9 September'
-declare VERSION='0.0.3'
+declare VERSION='0.0.6'
 
 declare -rx Script="${0##*/}"
 declare -rx chmod="/bin/chmod"
+declare -rx chown="/bin/chown"
+declare -rx clear="/usr/bin/clear"
 declare -rx cp="/bin/cp"
 declare -rx cut="/usr/bin/cut"
+declare -rx date="/bin/date"
 declare -rx du="/usr/bin/du"
 declare -rx echo="/bin/echo"
+declare -rx mkdir="/bin/mkdir"
+declare -rx mkisofs="/usr/bin/mkisofs"
 declare -rx mksquashfs="/usr/bin/mksquashfs"
 declare -rx mv="/bin/mv"
 declare -rx rm="/bin/rm"
+declare -rx sleep="/bin/sleep"
 declare -rx unsquashfs="/usr/bin/unsquashfs"
+
 
 function helpinfo()
 {
@@ -86,6 +93,27 @@ $echo "
 	After the new filesystem.squashfs has been moved into place it will
 	calculate the size of the new file system and writes that to the
 	filesystem.size file before setting the permission on that file as well.
+
+	- Create the ISO file from the ISODIR
+
+		$Script build ISODIR NAME-OF-ISO USER-ID
+
+	Creates the ISO file from the contents in the ISODIR directory. The
+	resulting ISO file is created in a directory with the same name as the ISO. The
+	USER-ID is the id for the user that is going to manage the ISO file after its
+	built. The script must be executed as root but, you might want to set the permissions
+	so that other users can use these ISO files as well.
+	The name of the resulting ISO file will be created after the following scheme:
+
+		NAME-OF-ISO_yymmddhhmm.iso
+
+	If the script was executed with the following command:
+
+		$Script build ISODIR MyDistro bob
+
+	It would make a directory called MyDistro and create a ISO file that called
+	MyDistro_1409092239.iso inside of it and the ownership would be given to bob.
+
 "
 }
 
@@ -156,10 +184,66 @@ function closefs()
 }
 
 
-if [[ "$1" = "help" && -z $1 && "$1" != "open" && "$1" != "close" && "$1" != "help" ]]
+function createiso()
+{
+	if [ ! -d $1 ]
+	then
+		$echo "ERROR: $1 dont appear to exist"
+		exit 1
+	fi
+
+	iso_name="$2.$($date +"%y%m%d%H%H").iso"
+
+	if [ ! -d $2 ]
+	then
+		$mkdir $2
+	fi
+
+	$clear
+	$echo "Starting to build $iso_name...."
+
+	$mkisofs -J -l -b isolinux/isolinux.bin \
+	-no-emul-boot -boot-load-size 4 \
+	-boot-info-table -z -iso-level 4 \
+	-c isolinux/isolinux.cat \
+	-o $2/$iso_name \
+	-joliet-long $1
+
+	$echo 'Done! Setting permissions on the ISO file..'
+
+	$sleep 1
+
+	$chown -R $3:$3 $2
+
+	$echo "Created $iso_name in $2 and ownership has been given to $3"
+}
+
+
+if [ $EUID != 0 ]
+then
+	$echo "ERROR: You must execute this script as root"
+	exit 1
+fi
+
+
+if [ $# = 0 ]
 then
 	helpinfo
+	exit 1
+fi
+
+
+if [[ -z $1 && "$1" != "open" && "$1" != "close" && "$1" != "help" ]]
+then
+	helpinfo
+	exit 1
 else
+	if [ "$1" = "help" ] 
+	then
+		helpinfo
+		exit 1
+	fi
+
 	if [ "$1" = "open" ]
 	then
 		if [ $# !=  2 ]
@@ -186,6 +270,17 @@ else
 		else
 		    closefs $2 $3
 		 fi
+	fi
+
+	if [ "$1" = "build" ]
+	then
+		if [ $# != 4 ]
+		then
+			helpinfo
+			exit 1
+		else
+			createiso $2 $3 $4
+		fi
 	fi
 fi
 
