@@ -49,10 +49,10 @@ declare rotate="14400"
 declare lognum="42"
 
 # Output pcap file
-declare pcap="$1/IRC_%Y%m%d_%H%M%S.pcap"
+declare pcap="$1/HTTP_%Y%m%d_%H%M%S.pcap"
 
 # Port(s) and protocol to capture (default: tcp portrange 6660-6669)
-declare data="tcp portrange 6660-6669"
+declare data="tcp port 80"
 
 # Log file (default: /var/log/syslog)
 declare syslog="/var/log/syslog"
@@ -109,7 +109,7 @@ function daemon_capture()
 
     $tcpd -n -i $capif -s $snaplen -G $rotate -w $pcap -C $lognum $data || failed &
 
-    $echo "$($date +"%b %d %T") $HOSTNAME $Script: Packet capture was started with $!" >> $syslog
+    $echo "$($date +"%b %d %T") $HOSTNAME $Script: Packet capture was started with pid $!" >> $syslog
 }
 
 
