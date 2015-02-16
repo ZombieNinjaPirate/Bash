@@ -26,7 +26,7 @@
 #   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY 
 #   WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#   Version:    0.1.1
+#   Version:    0.1.0
 #   Date:       2014, November 29
 #   Info:       Creates a backround instance of tcpdump that will capture traffic on a
 #               certain port(s) to a file thats rotated after a set number of seconds.
