@@ -26,7 +26,7 @@ function check_uid()
 
 function clear_boot()
 {
-    echo 'NOT IMPLEMENTED YET - Removing obsolete files in /boot'
+    echo 'NOT IMPLEMENTED YET - Removing obsolete files in /boot.'
 }
 
 
